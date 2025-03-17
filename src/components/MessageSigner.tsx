@@ -10,9 +10,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface MessageSignerProps {
   isConnected: boolean;
+  addLog: (action: string, details: string) => void;
 }
 
-const MessageSigner = ({ isConnected }: MessageSignerProps) => {
+const MessageSigner = ({ isConnected, addLog }: MessageSignerProps) => {
   const [message, setMessage] = useState("");
   const [signatureType, setSignatureType] = useState<"ecdsa" | "bip322-simple">("ecdsa");
   const [signature, setSignature] = useState<string | null>(null);
@@ -21,14 +22,18 @@ const MessageSigner = ({ isConnected }: MessageSignerProps) => {
 
   const signMessage = async () => {
     if (!message.trim()) {
-      toast.error("Message cannot be empty", {
+      const errorMsg = "Message cannot be empty";
+      addLog("Sign Error", errorMsg);
+      toast.error(errorMsg, {
         description: "Please enter a message to sign",
       });
       return;
     }
 
     if (!window.okxwallet) {
-      toast.error("OKX Wallet extension not found", {
+      const errorMsg = "OKX Wallet extension not found";
+      addLog("Sign Error", errorMsg);
+      toast.error(errorMsg, {
         description: "Please install the OKX Wallet extension and refresh the page",
       });
       return;
@@ -36,13 +41,19 @@ const MessageSigner = ({ isConnected }: MessageSignerProps) => {
 
     try {
       setSigning(true);
+      addLog("Sign Request", `Signing message: "${message}" using ${signatureType}`);
+      
       const signedMessage = await window.okxwallet.bitcoin.signMessage(message, signatureType);
+      
+      addLog("Sign Response", `Received signature: ${signedMessage}`);
       setSignature(signedMessage);
       toast.success("Message signed successfully");
     } catch (error) {
       console.error("Signing error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      addLog("Sign Error", errorMessage);
       toast.error("Failed to sign message", {
-        description: error instanceof Error ? error.message : "Unknown error occurred",
+        description: errorMessage,
       });
     } finally {
       setSigning(false);
@@ -52,6 +63,7 @@ const MessageSigner = ({ isConnected }: MessageSignerProps) => {
   const copySignature = () => {
     if (signature) {
       navigator.clipboard.writeText(signature);
+      addLog("Copy Signature", "Signature copied to clipboard");
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast.success("Signature copied to clipboard");
@@ -87,7 +99,10 @@ const MessageSigner = ({ isConnected }: MessageSignerProps) => {
             <Select
               disabled={!isConnected}
               value={signatureType}
-              onValueChange={(value) => setSignatureType(value as "ecdsa" | "bip322-simple")}
+              onValueChange={(value) => {
+                setSignatureType(value as "ecdsa" | "bip322-simple");
+                addLog("Change Signature Type", `Selected type: ${value}`);
+              }}
             >
               <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
                 <SelectValue placeholder="Select signature type" />

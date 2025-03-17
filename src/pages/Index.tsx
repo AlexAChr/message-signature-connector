@@ -1,12 +1,35 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import WalletConnect from "@/components/WalletConnect";
 import MessageSigner from "@/components/MessageSigner";
+import WalletLogs from "@/components/WalletLogs";
 import { motion } from "framer-motion";
+
+interface LogEntry {
+  id: number;
+  timestamp: string;
+  action: string;
+  details: string;
+}
 
 const Index = () => {
   const [address, setAddress] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+
+  const addLog = useCallback((action: string, details: string) => {
+    const newLog: LogEntry = {
+      id: Date.now(),
+      timestamp: new Date().toLocaleTimeString(),
+      action,
+      details,
+    };
+    setLogs((prevLogs) => [newLog, ...prevLogs]);
+  }, []);
+
+  const clearLogs = useCallback(() => {
+    setLogs([]);
+  }, []);
 
   const handleConnect = (walletAddress: string) => {
     setAddress(walletAddress);
@@ -34,8 +57,13 @@ const Index = () => {
           onConnect={handleConnect} 
           isConnected={isConnected}
           address={address}
+          addLog={addLog}
         />
-        <MessageSigner isConnected={isConnected} />
+        <MessageSigner 
+          isConnected={isConnected} 
+          addLog={addLog}
+        />
+        <WalletLogs logs={logs} onClear={clearLogs} />
       </div>
       
       <motion.footer

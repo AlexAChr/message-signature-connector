@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,23 +9,28 @@ interface WalletConnectProps {
   onConnect: (address: string) => void;
   isConnected: boolean;
   address: string | null;
+  addLog: (action: string, details: string) => void;
 }
 
-const WalletConnect = ({ onConnect, isConnected, address }: WalletConnectProps) => {
+const WalletConnect = ({ onConnect, isConnected, address, addLog }: WalletConnectProps) => {
   const [connecting, setConnecting] = useState(false);
 
   const connectWallet = async () => {
     try {
       setConnecting(true);
+      addLog("Connect Request", "Attempting to connect to OKX wallet");
       
       if (!window.okxwallet) {
-        toast.error("OKX Wallet extension not found", {
+        const errorMsg = "OKX Wallet extension not found";
+        addLog("Connect Error", errorMsg);
+        toast.error(errorMsg, {
           description: "Please install the OKX Wallet extension and refresh the page",
         });
         return;
       }
       
       const result = await window.okxwallet.bitcoin.connect();
+      addLog("Connect Response", JSON.stringify(result, null, 2));
       
       if (result?.address) {
         onConnect(result.address);
@@ -36,8 +40,10 @@ const WalletConnect = ({ onConnect, isConnected, address }: WalletConnectProps) 
       }
     } catch (error) {
       console.error("Connection error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      addLog("Connect Error", errorMessage);
       toast.error("Failed to connect wallet", {
-        description: error instanceof Error ? error.message : "Unknown error occurred",
+        description: errorMessage,
       });
     } finally {
       setConnecting(false);
@@ -47,6 +53,7 @@ const WalletConnect = ({ onConnect, isConnected, address }: WalletConnectProps) 
   const copyAddress = () => {
     if (address) {
       navigator.clipboard.writeText(address);
+      addLog("Copy Address", `Copied address: ${address}`);
       toast.success("Address copied to clipboard");
     }
   };
