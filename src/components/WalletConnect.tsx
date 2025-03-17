@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Wallet, ArrowRight, Copy } from "lucide-react";
+import { Wallet, ArrowRight, Copy, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface WalletConnectProps {
@@ -48,6 +49,14 @@ const WalletConnect = ({ onConnect, isConnected, address, addLog }: WalletConnec
     } finally {
       setConnecting(false);
     }
+  };
+
+  const disconnectWallet = () => {
+    addLog("Disconnect", "User disconnected wallet");
+    onConnect("");
+    toast.success("Wallet disconnected", {
+      description: "Your OKX wallet has been disconnected successfully",
+    });
   };
 
   const copyAddress = () => {
@@ -129,9 +138,17 @@ const WalletConnect = ({ onConnect, isConnected, address, addLog }: WalletConnec
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-center text-sm text-muted-foreground mb-4">
                 You can now sign messages with your connected wallet
               </p>
+              <Button 
+                variant="outline" 
+                onClick={disconnectWallet}
+                className="flex items-center"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Disconnect Wallet
+              </Button>
             </div>
           )}
         </CardContent>

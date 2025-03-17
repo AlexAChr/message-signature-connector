@@ -32,6 +32,11 @@ const Index = () => {
   }, []);
 
   const handleConnect = (walletAddress: string) => {
+    if (walletAddress === "") {
+      setAddress(null);
+      setIsConnected(false);
+      return;
+    }
     setAddress(walletAddress);
     setIsConnected(true);
   };
